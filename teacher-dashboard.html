@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vault Escape — Teacher Dashboard</title>
+<!-- QR Code Generator CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+  :root {
+    --bg: #161f16;
+    --panel: #2b2015;
+    --panel-alt: #3a2c1b;
+    --brass: #c9a24b;
+    --brass-bright: #e8c96b;
+    --brass-dim: #7a6633;
+    --success: #5a9e5f;
+    --danger: #a8453a;
+    --text: #ece3d0;
+    --text-dim: #a89a80;
+    --border: #4a3826;
+    --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 20px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+  }
+  .container { max-width: 1000px; margin: 0 auto; }
+  h1, h2 { color: var(--brass-bright); margin-top: 0; }
+  .panel {
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .btn {
+    background: var(--brass);
+    color: #1a1a1a;
+    border: none;
+    padding: 10px 16px;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn:hover { background: var(--brass-bright); }
+  .btn-danger { background: var(--danger); color: white; }
+  .btn-secondary { background: var(--panel-alt); color: var(--text); border: 1px solid var(--border); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .team-card {
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+  }
+  .team-card.finished { border-color: var(--success); }
+  .timer-display {
+    font-size: 3rem;
+    color: var(--brass-bright);
+    font-weight: bold;
+    text-align: center;
+    background: #000;
+    padding: 10px;
+    border-radius: 6px;
+    margin: 10px 0;
+  }
+  .flex-gap { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  input, select {
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px;
+    border-radius: 4px;
+    font-family: inherit;
+  }
+  #qrcode { background: #fff; padding: 10px; border-radius: 4px; display: inline-block; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Vault Escape — Command Dashboard</h1>
+
+  <!-- SETUP SCREEN -->
+  <div id="setupScreen" class="panel">
+    <h2>1. Game Setup</h2>
+    <div style="margin-bottom: 15px;">
+      <label>Timer Duration (Minutes): </label>
+      <input type="number" id="timeMinutes" value="45" min="1" max="180">
+    </div>
+    <div style="margin-bottom: 15px;">
+      <label>Team Naming Style: </label>
+      <select id="namingStyle" onchange="generateTeams()">
+        <option value="sleuth">Sleuth / Cipher Names</option>
+        <option value="colors">Color Names</option>
+        <option value="custom">Custom Names</option>
+      </select>
+    </div>
+    <div style="margin-bottom: 15px;">
+      <label>Number of Teams: </label>
+      <input type="number" id="teamCount" value="6" min="1" max="12" onchange="generateTeams()">
+    </div>
+    <div id="customNamesContainer" style="margin-bottom: 15px;"></div>
+    
+    <button class="btn" onclick="createNewRoom()">Generate Live Room</button>
+  </div>
+
+  <!-- DASHBOARD SCREEN -->
+  <div id="dashboardScreen" class="panel" hidden>
+    <div class="flex-gap" style="justify-content: space-between;">
+      <div>
+        <h2>Room Code: <span id="roomCodeDisplay" style="color:var(--brass-bright)">------</span></h2>
+        <p style="margin:2px 0;">Student Join URL: <strong id="studentUrlDisplay" style="color:var(--brass)"></strong></p>
+      </div>
+      <div id="qrcode"></div>
+    </div>
+
+    <div class="timer-display" id="timerDisplay">45:00</div>
+
+    <!-- TEACHER CONTROLS -->
+    <div class="flex-gap" style="justify-content: center; margin-bottom: 20px;">
+      <button class="btn" onclick="controlGame('start')">Start</button>
+      <button class="btn btn-secondary" onclick="controlGame('pause')">Pause</button>
+      <button class="btn btn-secondary" onclick="controlGame('reset')">Reset Timer</button>
+      <button class="btn btn-danger" onclick="controlGame('end')">End Game</button>
+    </div>
+
+    <h2>Live Team Progress</h2>
+    <div id="teamGrid" class="grid"></div>
+  </div>
+</div>
+
+<script>
+// Firebase Config (Pre-configured standard public instance)
+const firebaseConfig = {
+  databaseURL: "https://vault-escape-default-rtdb.firebaseio.com"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let currentRoomId = null;
+let roomRef = null;
+
+const SLEUTH_NAMES = ['Cipher Squad', 'Vault Breakers', 'The Locksmiths', 'Code Crackers', 'Silent Alarm', 'Safecrackers', 'The Tumblers', 'Skeleton Keys', 'Dead Drop Crew', 'Shadow Agents', 'Iron Vault', 'Master Keys'];
+const COLOR_NAMES = ['Red Team', 'Blue Team', 'Green Team', 'Yellow Team', 'Purple Team', 'Orange Team', 'Silver Team', 'Gold Team', 'Bronze Team', 'Copper Team', 'Cobalt Team', 'Crimson Team'];
+
+function generateTeams() {
+  const count = parseInt(document.getElementById('teamCount').value) || 4;
+  const style = document.getElementById('namingStyle').value;
+  const container = document.getElementById('customNamesContainer');
+  container.innerHTML = '';
+
+  if (style === 'custom') {
+    for (let i = 0; i < count; i++) {
+      container.innerHTML += `<input type="text" class="custom-team-input" value="Team ${i+1}" style="margin:2px;"> `;
+    }
+  }
+}
+generateTeams();
+
+function getTeamNames() {
+  const count = parseInt(document.getElementById('teamCount').value) || 4;
+  const style = document.getElementById('namingStyle').value;
+  let names = [];
+  if (style === 'sleuth') names = SLEUTH_NAMES.slice(0, count);
+  else if (style === 'colors') names = COLOR_NAMES.slice(0, count);
+  else {
+    document.querySelectorAll('.custom-team-input').forEach(inp => names.push(inp.value.trim() || 'Team'));
+  }
+  return names;
+}
+
+function createNewRoom() {
+  currentRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+  const minutes = parseInt(document.getElementById('timeMinutes').value) || 45;
+  const names = getTeamNames();
+  
+  const initialTeams = {};
+  names.forEach((name, idx) => {
+    initialTeams[`team_${idx}`] = {
+      name: name,
+      progress: 0, // Locks solved (0 to 6)
+      finished: false,
+      finishTime: null
+    };
+  });
+
+  const roomData = {
+    createdAt: Date.now(),
+    expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 Hour Expiry
+    durationSeconds: minutes * 60,
+    secondsRemaining: minutes * 60,
+    status: 'setup', // setup, running, paused, ended
+    teams: initialTeams
+  };
+
+  roomRef = db.ref('rooms/' + currentRoomId);
+  roomRef.set(roomData).then(() => {
+    setupDashboardUI();
+    listenToRoomUpdates();
+  });
+}
+
+function setupDashboardUI() {
+  document.getElementById('setupScreen').hidden = true;
+  document.getElementById('dashboardScreen').hidden = false;
+  document.getElementById('roomCodeDisplay').textContent = currentRoomId;
+
+  // Derive Student URL based on current host path assuming student file is adjacent
+  const studentUrl = window.location.href.replace('teacher-dashboard.html', 'student-node.html') + '?room=' + currentRoomId;
+  document.getElementById('studentUrlDisplay').textContent = studentUrl;
+
+  document.getElementById('qrcode').innerHTML = '';
+  new QRCode(document.getElementById('qrcode'), {
+    text: studentUrl,
+    width: 128,
+    height: 128
+  });
+}
+
+function listenToRoomUpdates() {
+  roomRef.on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
+
+    // Update Timer Display
+    const m = Math.floor(data.secondsRemaining / 60).toString().padStart(2, '0');
+    const s = (data.secondsRemaining % 60).toString().padStart(2, '0');
+    document.getElementById('timerDisplay').textContent = `${m}:${s}`;
+
+    // Render Teams Dashboard
+    const grid = document.getElementById('teamGrid');
+    grid.innerHTML = '';
+    
+    Object.keys(data.teams).forEach(key => {
+      const team = data.teams[key];
+      const card = document.createElement('div');
+      card.className = `team-card ${team.finished ? 'finished' : ''}`;
+      
+      let locksHtml = '';
+      for (let i = 1; i <= 6; i++) {
+        const isSolved = i <= team.progress;
+        locksHtml += `<span style="font-size:1.2rem; margin-right:4px;">${isSolved ? '🔓' : '🔒'}</span>`;
+      }
+
+      card.innerHTML = `
+        <h3 style="margin:0 0 10px 0;">${team.name}</h3>
+        <div>${locksHtml}</div>
+        <p style="font-size:0.85rem; color:var(--text-dim);">Locks Unlocked: ${team.progress} / 6</p>
+        ${team.finished ? `<p style="color:var(--success); font-weight:bold;">Escaped! (${team.finishTime})</p>` : ''}
+        <button class="btn btn-secondary" style="font-size:0.75rem; margin-top:8px;" onclick="overrideSkipLock('${key}', ${team.progress})">Teacher Override: Skip Lock</button>
+      `;
+      grid.appendChild(card);
+    });
+  });
+}
+
+// Master Timer Clock (Runs on Teacher Dashboard)
+setInterval(() => {
+  if (!roomRef) return;
+  roomRef.child('status').once('value', (snap) => {
+    if (snap.val() === 'running') {
+      roomRef.child('secondsRemaining').transaction((curr) => {
+        if (curr <= 1) {
+          roomRef.update({ status: 'ended' });
+          return 0;
+        }
+        return curr - 1;
+      });
+    }
+  });
+}, 1000);
+
+function controlGame(action) {
+  if (!roomRef) return;
+  if (action === 'start') roomRef.update({ status: 'running' });
+  if (action === 'pause') roomRef.update({ status: 'paused' });
+  if (action === 'end') roomRef.update({ status: 'ended' });
+  if (action === 'reset') {
+    const min = parseInt(document.getElementById('timeMinutes').value) || 45;
+    roomRef.update({ status: 'setup', secondsRemaining: min * 60 });
+  }
+}
+
+function overrideSkipLock(teamKey, currentProgress) {
+  if (currentProgress >= 6) return;
+  const newProg = currentProgress + 1;
+  const updates = {};
+  updates[`teams/${teamKey}/progress`] = newProg;
+  if (newProg === 6) {
+    updates[`teams/${teamKey}/finished`] = true;
+    updates[`teams/${teamKey}/finishTime`] = document.getElementById('timerDisplay').textContent;
+  }
+  roomRef.update(updates);
+}
+</script>
+</body>
+</html>
