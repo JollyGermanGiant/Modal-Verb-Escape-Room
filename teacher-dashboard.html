@@ -222,8 +222,13 @@ function setupDashboardUI() {
   document.getElementById('dashboardScreen').hidden = false;
   document.getElementById('roomCodeDisplay').textContent = currentRoomId;
 
-  // Generate exact student URL based on current host URL
-  const studentUrl = window.location.href.replace('teacher-dashboard.html', 'student-node.html') + '?room=' + currentRoomId;
+  // Build the student URL dynamically regardless of how the teacher page was loaded
+  const origin = window.location.origin;
+  const pathParts = window.location.pathname.split('/');
+  pathParts.pop(); // Remove current filename or trailing slash
+  const basePath = pathParts.join('/');
+  
+  const studentUrl = `${origin}${basePath}/student-node.html?room=${currentRoomId}`;
   document.getElementById('studentUrlDisplay').textContent = studentUrl;
 
   const qrContainer = document.getElementById('qrcode');
@@ -237,7 +242,6 @@ function setupDashboardUI() {
     });
   }
 }
-
 function listenToRoomUpdates() {
   if (!roomRef) return;
   roomRef.on('value', (snapshot) => {
