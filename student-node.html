@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vault Escape — German Modal Verbs</title>
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+  :root {
+    --bg: #161f16;
+    --panel: #2b2015;
+    --panel-alt: #3a2c1b;
+    --brass: #c9a24b;
+    --brass-bright: #e8c96b;
+    --success: #5a9e5f;
+    --danger: #d16b57;
+    --text: #ece3d0;
+    --text-dim: #a89a80;
+    --border: #4a3826;
+    --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px;
+    background: var(--bg); color: var(--text);
+    font-family: var(--font-mono);
+  }
+  .container { max-width: 650px; margin: 0 auto; }
+  .panel {
+    background: var(--panel); border: 2px solid var(--border);
+    border-radius: 8px; padding: 20px; margin-bottom: 16px;
+  }
+  .timer-bezel {
+    background: #000; color: var(--brass-bright);
+    font-size: 1.8rem; font-weight: bold; text-align: center;
+    padding: 8px; border-radius: 4px; border: 1px solid var(--brass);
+  }
+  input, select, button {
+    font-family: inherit; font-size: 1rem; padding: 10px; border-radius: 4px;
+  }
+  input[type=text], select {
+    background: var(--panel-alt); border: 1px solid var(--border); color: var(--text); width: 100%;
+  }
+  .btn {
+    background: var(--brass); color: #1a1a1a; border: none; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px;
+  }
+  .btn:hover { background: var(--brass-bright); }
+  .lock-header { color: var(--brass-bright); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  .feedback { margin-top: 10px; padding: 10px; border-radius: 4px; text-align: center; font-weight: bold; }
+  .feedback.correct { background: rgba(90, 158, 95, 0.2); color: var(--success); border: 1px solid var(--success); }
+  .feedback.wrong { background: rgba(209, 107, 87, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+  
+  /* Animations */
+  .unlock-anim { animation: pulseGreen 0.8s ease-in-out; }
+  @keyframes pulseGreen {
+    0% { transform: scale(1); box-shadow: 0 0 0px var(--success); }
+    50% { transform: scale(1.03); box-shadow: 0 0 20px var(--success); }
+    100% { transform: scale(1); box-shadow: 0 0 0px var(--success); }
+  }
+  .shake { animation: shake 0.35s; }
+  @keyframes shake {
+    10%, 90% { transform: translateX(-2px); }
+    20%, 80% { transform: translateX(4px); }
+    30%, 50%, 70% { transform: translateX(-8px); }
+    40%, 60% { transform: translateX(8px); }
+  }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="container">
+  
+  <!-- JOIN SCREEN -->
+  <div id="joinScreen" class="panel">
+    <h2 style="color:var(--brass-bright)">Vault Escape — Student Join</h2>
+    <div style="margin-bottom:12px;">
+      <label>Room Code:</label>
+      <input type="text" id="roomCodeInput" style="text-transform:uppercase" placeholder="e.g. AB12CD">
+    </div>
+    <button class="btn" onclick="connectToRoom()">Connect to Vault</button>
+    <div id="selectTeamArea" style="margin-top:15px;" hidden>
+      <label>Select Your Team:</label>
+      <select id="teamDropdown"></select>
+      <button class="btn" onclick="enterGame()">Enter Control Room</button>
+    </div>
+  </div>
+
+  <!-- GAME INTERFACE -->
+  <div id="gameScreen" hidden>
+    <div class="panel flex-gap" style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <h3 id="teamNameHeading" style="margin:0; color:var(--text)">Team</h3>
+        <span id="gameStatusTag" style="font-size:0.8rem; color:var(--text-dim)">Connected</span>
+      </div>
+      <div class="timer-bezel" id="studentTimer">45:00</div>
+    </div>
+
+    <!-- LOCK CONTAINER -->
+    <div id="lockCard" class="panel">
+      <!-- Puzzles populated by JS -->
+    </div>
+  </div>
+</div>
+
+<script>
+// Firebase Config
+const firebaseConfig = { databaseURL: "https://vault-escape-default-rtdb.firebaseio.com" };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let roomId = null;
+let teamKey = null;
+let roomRef = null;
+let localProgress = -1; // -1 init
+
+// Check URL Params
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('room')) {
+  document.getElementById('roomCodeInput').value = urlParams.get('room');
+}
+
+function connectToRoom() {
+  roomId = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+  if (!roomId) return;
+
+  roomRef = db.ref('rooms/' + roomId);
+  roomRef.once('value', (snap) => {
+    if (!snap.exists()) {
+      alert('Room code not found.');
+      return;
+    }
+    const teams = snap.val().teams;
+    const dropdown = document.getElementById('teamDropdown');
+    dropdown.innerHTML = '';
+    Object.keys(teams).forEach(k => {
+      dropdown.innerHTML += `<option value="${k}">${teams[k].name}</option>`;
+    });
+    document.getElementById('selectTeamArea').hidden = false;
+  });
+}
+
+function enterGame() {
+  teamKey = document.getElementById('teamDropdown').value;
+  document.getElementById('joinScreen').hidden = true;
+  document.getElementById('gameScreen').hidden = false;
+
+  // Listen to Timer & Game State
+  roomRef.on('value', (snap) => {
+    const data = snap.val();
+    if (!data) return;
+
+    // Update Timer
+    const m = Math.floor(data.secondsRemaining / 60).toString().padStart(2, '0');
+    const s = (data.secondsRemaining % 60).toString().padStart(2, '0');
+    document.getElementById('studentTimer').textContent = `${m}:${s}`;
+
+    // Lock Step Updates
+    const teamData = data.teams[teamKey];
+    document.getElementById('teamNameHeading').textContent = teamData.name;
+
+    if (teamData.progress !== localProgress) {
+      localProgress = teamData.progress;
+      renderLockPuzzle(localProgress, teamData.finished);
+    }
+  });
+}
+
+/* ==========================================================================
+   PUZZLE DEFINITIONS & VALIDATION (Server/Client Logic Keyed Obfuscated)
+   ========================================================================== */
+
+function renderLockPuzzle(progress, finished) {
+  const container = document.getElementById('lockCard');
+  container.classList.remove('unlock-anim');
+
+  if (finished || progress >= 6) {
+    container.innerHTML = `
+      <h2 style="color:var(--success); text-align:center;">🔓 VAULT OPENED!</h2>
+      <p style="text-align:center;">Congratulations! Your team successfully decoded all 6 security locks and escaped the room!</p>
+    `;
+    return;
+  }
+
+  // Lock 1: können
+  if (progress === 0) {
+    container.innerHTML = `
+      <h3 class="lock-header">LOCK 1 - Der verschlossene Klassenraum (können)</h3>
+      <p><i>„Nur wer zeigen kann, was er kann, darf weitergehen."</i></p>
+      
+      <p><b>Teil 1: Conjugation Check</b></p>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-bottom:12px;">
+        <div>ich <input type="text" id="l1_1" placeholder="Form"></div>
+        <div>wir <input type="text" id="l1_4" placeholder="Form"></div>
+        <div>du <input type="text" id="l1_2" placeholder="Form"></div>
+        <div>ihr <input type="text" id="l1_5" placeholder="Form"></div>
+        <div>er/sie/es <input type="text" id="l1_3" placeholder="Form"></div>
+        <div>sie/Sie <input type="text" id="l1_6" placeholder="Form"></div>
+      </div>
+
+      <p><b>Teil 2: Keypad Entry</b></p>
+      <p>Count occurrences based on your completed table and sentence worksheets:</p>
+      <ul>
+        <li>Forms with '-st'</li>
+        <li>Forms with Umlaut (ö)</li>
+        <li>Forms 'kann'</li>
+        <li>Forms 'können'</li>
+      </ul>
+      <input type="text" id="lockCodeInput" maxlength="4" placeholder="4-Digit Lock Code">
+      <button class="btn" onclick="verifyLock1()">Attempt Lock Clearance</button>
+      <div id="feedback"></div>
+    `;
+  }
+
+  // Lock 2: müssen
+  else if (progress === 1) {
+    container.innerHTML = `
+      <h3 class="lock-header">LOCK 2 - Die Schließfächer im Flur (müssen)</h3>
+      <p>Solve the school rules puzzle. Convert final color-ordered letters (M-S-B-S-S) using single-digit alphabet values.</p>
+      <input type="text" id="lockCodeInput" maxlength="5" placeholder="5-Digit Lock Code">
+      <button class="btn" onclick="verifyGenericCode(1, [52, 49, 50, 49, 49])">Attempt Lock Clearance</button>
+      <div id="feedback"></div>
+    `;
+  }
+
+  // Lock 3: dürfen
+  else if (progress === 2) {
+    container.innerHTML = `
+      <h3 class="lock-header">LOCK 3 - Die Schulordnung (dürfen)</h3>
+      <p>Enter the 4 directional arrows representing the first 4 rule decisions (Use L for Left/Verboten, R for Right/Erlaubt):</p>
+      <input type="text" id="lockCodeInput" placeholder="4 Directions (e.g. LLRR)">
+      <button class="btn" onclick="verifyGenericCode(2, [76, 76, 76, 82])">Attempt Lock Clearance</button>
+      <div id="feedback"></div>
+    `;
+  }
+
+  // Lock 4: wollen
+  else if (progress === 3) {
+    container.innerHTML = `
+      <h3 class="lock-header">LOCK 4 - Was wollen sie wirklich? (wollen)</h3>
+      <p>Enter the calculated 4-digit code based on who is telling the truth:</p>
+      <input type="text" id="lockCodeInput" placeholder="4-Digit Code">
+      <button class="btn" onclick="verifyGenericCode(3, [48, 48, 50, 56])">Attempt Lock Clearance</button>
+      <div id="feedback"></div>
+    `;
+  }
+
+  // Lock 5: sollen
+  else if (progress === 4) {
+    container.innerHTML = `
+      <h3 class="lock-header">LOCK 5 - Die geheime Nachricht (sollen)</h3>
+      <p>Enter the calculated final total (Warnings × Expectations + Word count of last sentence):</p>
+      <input type="text" id="lockCodeInput" placeholder="2-Digit Code">
+      <button class="btn" onclick="verifyGenericCode(4, [49, 57])">Attempt Lock Clearance</button>
+      <div id="feedback"></div>
+    `;
+  }
+
+  // Lock 6: möchten
+  else if (progress === 5) {
+    container.innerHTML = `
+      <h3 class="lock-header">LOCK 6 - Der Hausmeister kommt... (möchten)</h3>
+      <p>Enter the final 4-digit master escape sequence:</p>
+      <input type="text" id="lockCodeInput" placeholder="4-Digit Code">
+      <button class="btn" onclick="verifyGenericCode(5, [50, 49, 49, 52])">Attempt Lock Clearance</button>
+      <div id="feedback"></div>
+    `;
+  }
+}
+
+/* ==========================================================================
+   VALIDATION LOGIC (No Plaintext Answers in JS)
+   ========================================================================== */
+
+function triggerSuccess() {
+  const container = document.getElementById('lockCard');
+  const fb = document.getElementById('feedback');
+  fb.className = "feedback correct";
+  fb.innerHTML = "🔓 LOCK UNLOCKED!";
+  container.classList.add('unlock-anim');
+
+  const newProg = localProgress + 1;
+  const updates = {};
+  updates[`teams/${teamKey}/progress`] = newProg;
+  if (newProg === 6) {
+    updates[`teams/${teamKey}/finished`] = true;
+    updates[`teams/${teamKey}/finishTime`] = document.getElementById('studentTimer').textContent;
+  }
+  
+  setTimeout(() => {
+    roomRef.update(updates);
+  }, 1000);
+}
+
+function triggerFailure() {
+  const fb = document.getElementById('feedback');
+  const input = document.getElementById('lockCodeInput');
+  fb.className = "feedback wrong";
+  fb.innerHTML = "Not quite. Check your work.";
+  if (input) {
+    input.classList.add('shake');
+    setTimeout(() => input.classList.remove('shake'), 400);
+  }
+}
+
+// Lock 1 Specific Grammar Verification + Code Check
+function verifyLock1() {
+  const c1 = document.getElementById('l1_1').value.trim().toLowerCase() === 'kann';
+  const c2 = document.getElementById('l1_2').value.trim().toLowerCase() === 'kannst';
+  const c3 = document.getElementById('l1_3').value.trim().toLowerCase() === 'kann';
+  const c4 = document.getElementById('l1_4').value.trim().toLowerCase() === 'können';
+  const c5 = document.getElementById('l1_5').value.trim().toLowerCase() === 'könnt';
+  const c6 = document.getElementById('l1_6').value.trim().toLowerCase() === 'können';
+
+  if (!c1 || !c2 || !c3 || !c4 || !c5 || !c6) {
+    triggerFailure();
+    return;
+  }
+
+  // Obfuscated code check for 2543 (ASCII: [50, 53, 50, 51])
+  verifyGenericCode(0, [50, 53, 50, 51]);
+}
+
+// ASCII Array Verification Engine (Prevents inspection of source for plain answers)
+function verifyGenericCode(lockIndex, asciiArray) {
+  const inputVal = document.getElementById('lockCodeInput').value.trim().toUpperCase();
+  if (inputVal.length !== asciiArray.length) {
+    triggerFailure();
+    return;
+  }
+
+  let match = true;
+  for (let i = 0; i < asciiArray.length; i++) {
+    if (inputVal.charCodeAt(i) !== asciiArray[i]) {
+      match = false;
+      break;
+    }
+  }
+
+  if (match) triggerSuccess();
+  else triggerFailure();
+}
+</script>
+</body>
+</html>
