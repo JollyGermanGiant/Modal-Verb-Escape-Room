@@ -137,11 +137,14 @@
 </div>
 
 <script>
-// Firebase Config (Pre-configured standard public instance)
+// Firebase Initializer
 const firebaseConfig = {
   databaseURL: "https://vault-escape-default-rtdb.firebaseio.com"
 };
-firebase.initializeApp(firebaseConfig);
+
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 const db = firebase.database();
 
 let currentRoomId = null;
@@ -177,34 +180,41 @@ function getTeamNames() {
 }
 
 function createNewRoom() {
-  currentRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-  const minutes = parseInt(document.getElementById('timeMinutes').value) || 45;
-  const names = getTeamNames();
-  
-  const initialTeams = {};
-  names.forEach((name, idx) => {
-    initialTeams[`team_${idx}`] = {
-      name: name,
-      progress: 0, // Locks solved (0 to 6)
-      finished: false,
-      finishTime: null
+  try {
+    currentRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const minutes = parseInt(document.getElementById('timeMinutes').value) || 45;
+    const names = getTeamNames();
+    
+    const initialTeams = {};
+    names.forEach((name, idx) => {
+      initialTeams[`team_${idx}`] = {
+        name: name,
+        progress: 0,
+        finished: false,
+        finishTime: null
+      };
+    });
+
+    const roomData = {
+      createdAt: Date.now(),
+      expiresAt: Date.now() + (24 * 60 * 60 * 1000),
+      durationSeconds: minutes * 60,
+      secondsRemaining: minutes * 60,
+      status: 'setup',
+      teams: initialTeams
     };
-  });
 
-  const roomData = {
-    createdAt: Date.now(),
-    expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 Hour Expiry
-    durationSeconds: minutes * 60,
-    secondsRemaining: minutes * 60,
-    status: 'setup', // setup, running, paused, ended
-    teams: initialTeams
-  };
-
-  roomRef = db.ref('rooms/' + currentRoomId);
-  roomRef.set(roomData).then(() => {
+    // Transition UI immediately
     setupDashboardUI();
+
+    // Sync to Realtime Database
+    roomRef = db.ref('rooms/' + currentRoomId);
+    roomRef.set(roomData);
     listenToRoomUpdates();
-  });
+  } catch (err) {
+    console.error("Error creating room: ", err);
+    alert("Could not generate room. Check developer console for details.");
+  }
 }
 
 function setupDashboardUI() {
@@ -212,29 +222,32 @@ function setupDashboardUI() {
   document.getElementById('dashboardScreen').hidden = false;
   document.getElementById('roomCodeDisplay').textContent = currentRoomId;
 
-  // Derive Student URL based on current host path assuming student file is adjacent
+  // Generate exact student URL based on current host URL
   const studentUrl = window.location.href.replace('teacher-dashboard.html', 'student-node.html') + '?room=' + currentRoomId;
   document.getElementById('studentUrlDisplay').textContent = studentUrl;
 
-  document.getElementById('qrcode').innerHTML = '';
-  new QRCode(document.getElementById('qrcode'), {
-    text: studentUrl,
-    width: 128,
-    height: 128
-  });
+  const qrContainer = document.getElementById('qrcode');
+  qrContainer.innerHTML = '';
+  
+  if (window.QRCode) {
+    new QRCode(qrContainer, {
+      text: studentUrl,
+      width: 128,
+      height: 128
+    });
+  }
 }
 
 function listenToRoomUpdates() {
+  if (!roomRef) return;
   roomRef.on('value', (snapshot) => {
     const data = snapshot.val();
     if (!data) return;
 
-    // Update Timer Display
     const m = Math.floor(data.secondsRemaining / 60).toString().padStart(2, '0');
     const s = (data.secondsRemaining % 60).toString().padStart(2, '0');
     document.getElementById('timerDisplay').textContent = `${m}:${s}`;
 
-    // Render Teams Dashboard
     const grid = document.getElementById('teamGrid');
     grid.innerHTML = '';
     
@@ -261,7 +274,6 @@ function listenToRoomUpdates() {
   });
 }
 
-// Master Timer Clock (Runs on Teacher Dashboard)
 setInterval(() => {
   if (!roomRef) return;
   roomRef.child('status').once('value', (snap) => {
