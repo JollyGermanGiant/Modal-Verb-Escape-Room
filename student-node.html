@@ -1134,55 +1134,74 @@ function renderLockPuzzle(
     `;
   }
 
+/* ============================================================
+     LOCK 3: DIE SCHULORDNUNG (DÜRFEN)
+     ============================================================ */
   else if (progress === 2) {
-
     container.innerHTML = `
-
       <h3 class="lock-header">
-
-        LOCK 3 —
-        Die Schulordnung
-        (dürfen)
-
+        LOCK 3 — Die Schulordnung (dürfen)
       </h3>
 
-
       <p>
-
-        Enter the 4 directional arrows
-        representing the first 4 rule decisions.
-
-        Use L for Left/Verboten,
-        R for Right/Erlaubt.
-
+        <i>„Nur wer weiß, was erlaubt und was verboten ist, findet den richtigen Weg.“</i>
       </p>
 
+      <p>
+        <b>Teil 1: Lest jede Regel.</b><br>
+        <span style="font-size: 0.85rem; color: #aaa; font-style: italic;">
+          Entscheidet für jeden Satz: <strong>Erlaubt (✅)</strong> oder <strong>Verboten (❌)</strong>.
+        </span>
+      </p>
 
-      <input
-        type="text"
-        id="lockCodeInput"
-        placeholder="4 Directions (e.g. LLRR)">
+      <ol style="padding-left: 20px; line-height: 2; margin-bottom: 20px;">
+        <li>Man darf hier nicht essen. 
+          <select id="l3_r1"><option value="">--</option><option value="yes">✅ Erlaubt</option><option value="no">❌ Verboten</option></select>
+        </li>
+        <li>Man darf im Flur laufen. 
+          <select id="l3_r2"><option value="">--</option><option value="yes">✅ Erlaubt</option><option value="no">❌ Verboten</option></select>
+        </li>
+        <li>Schüler dürfen in der Bibliothek leise sprechen. 
+          <select id="l3_r3"><option value="">--</option><option value="yes">✅ Erlaubt</option><option value="no">❌ Verboten</option></select>
+        </li>
+        <li>Man darf im Unterricht Musik hören. 
+          <select id="l3_r4"><option value="">--</option><option value="yes">✅ Erlaubt</option><option value="no">❌ Verboten</option></select>
+        </li>
+        <li>Man darf nach 16 Uhr das Gebäude betreten. 
+          <select id="l3_r5"><option value="">--</option><option value="yes">✅ Erlaubt</option><option value="no">❌ Verboten</option></select>
+        </li>
+        <li>Man darf die Fenster nicht öffnen. 
+          <select id="l3_r6"><option value="">--</option><option value="yes">✅ Erlaubt</option><option value="no">❌ Verboten</option></select>
+        </li>
+        <li>Schüler dürfen Fragen stellen. 
+          <select id="l3_r7"><option value="">--</option><option value="yes">✅ Erlaubt</option><option value="no">❌ Verboten</option></select>
+        </li>
+        <li>Man darf im Klassenzimmer Fußball spielen. 
+          <select id="l3_r8"><option value="">--</option><option value="yes">✅ Erlaubt</option><option value="no">❌ Verboten</option></select>
+        </li>
+      </ol>
 
+      <p>
+        <b>Teil 2: Findet den Weg (Pfeilschloss).</b><br>
+        <span style="font-size: 0.85rem; color: #aaa; font-style: italic;">
+          Beginnt bei Nummer 1. <strong>❌ = Geht nach links (L)</strong> | <strong>✅ = Geht nach rechts (R)</strong>.<br>
+          Wählt die 4 Richtungspfeile des Codes:
+        </span>
+      </p>
 
-      <button
-      type="button"
-        class="btn"
-        onclick="
-          verifyGenericCode(event,
-            2,
-            [76,76,76,82]
-          )
-        ">
+      <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px;">
+        <select id="l3_a1" style="font-size: 1.2rem; padding: 5px;"><option value="">--</option><option value="L">← (L)</option><option value="R">→ (R)</option></select>
+        <select id="l3_a2" style="font-size: 1.2rem; padding: 5px;"><option value="">--</option><option value="L">← (L)</option><option value="R">→ (R)</option></select>
+        <select id="l3_a3" style="font-size: 1.2rem; padding: 5px;"><option value="">--</option><option value="L">← (L)</option><option value="R">→ (R)</option></select>
+        <select id="l3_a4" style="font-size: 1.2rem; padding: 5px;"><option value="">--</option><option value="L">← (L)</option><option value="R">→ (R)</option></select>
+      </div>
 
+      <button type="button" class="btn" onclick="verifyLock3(event)">
         Attempt Lock Clearance
-
       </button>
 
-
       <div id="feedback"></div>
-
     `;
-
   }
 
 
