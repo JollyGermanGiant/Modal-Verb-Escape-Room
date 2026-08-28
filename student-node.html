@@ -1155,25 +1155,25 @@ function renderLockPuzzle(
       </p>
 
       <ol style="padding-left: 20px; line-height: 2; margin-bottom: 20px;">
-        <li>Man darf hier nicht essen. 
+        <li>Man darf im Klassenzimmer essen. 
           <select id="l3_r1"><option value="">--</option><option value="yes">✅ Erlaubt</option><option value="no">❌ Verboten</option></select>
         </li>
-        <li>Man darf im Flur laufen. 
+        <li>Man darf im Flur rennen. 
           <select id="l3_r2"><option value="">--</option><option value="yes">✅ Erlaubt</option><option value="no">❌ Verboten</option></select>
         </li>
         <li>Schüler dürfen in der Bibliothek leise sprechen. 
           <select id="l3_r3"><option value="">--</option><option value="yes">✅ Erlaubt</option><option value="no">❌ Verboten</option></select>
         </li>
-        <li>Man darf im Unterricht Musik hören. 
+        <li>Man darf im Unterricht laut Musik hören. 
           <select id="l3_r4"><option value="">--</option><option value="yes">✅ Erlaubt</option><option value="no">❌ Verboten</option></select>
         </li>
-        <li>Man darf nach 16 Uhr das Gebäude betreten. 
+        <li>Man darf abends ohne Erlaubnis in die Schule. 
           <select id="l3_r5"><option value="">--</option><option value="yes">✅ Erlaubt</option><option value="no">❌ Verboten</option></select>
         </li>
-        <li>Man darf die Fenster nicht öffnen. 
+        <li>Man darf während der Pause rausgehen. 
           <select id="l3_r6"><option value="">--</option><option value="yes">✅ Erlaubt</option><option value="no">❌ Verboten</option></select>
         </li>
-        <li>Schüler dürfen Fragen stellen. 
+        <li>Schüler dürfen im Unterricht Fragen stellen. 
           <select id="l3_r7"><option value="">--</option><option value="yes">✅ Erlaubt</option><option value="no">❌ Verboten</option></select>
         </li>
         <li>Man darf im Klassenzimmer Fußball spielen. 
@@ -1184,8 +1184,8 @@ function renderLockPuzzle(
       <p>
         <b>Teil 2: Findet den Weg (Pfeilschloss).</b><br>
         <span style="font-size: 0.85rem; color: #aaa; font-style: italic;">
-          Beginnt bei Nummer 1. <strong>❌ = Geht nach links (L)</strong> | <strong>✅ = Geht nach rechts (R)</strong>.<br>
-          Wählt die 4 Richtungspfeile des Codes:
+          Beginnt bei Nummer 1. <strong>❌ Verboten = Geht nach links (L)</strong> | <strong>✅ Erlaubt = Geht nach rechts (R)</strong>.<br>
+          Wählt die 4 Richtungspfeile des Codes für die ersten vier Regeln:
         </span>
       </p>
 
@@ -1203,8 +1203,6 @@ function renderLockPuzzle(
       <div id="feedback"></div>
     `;
   }
-
-
   else if (progress === 3) {
 
     container.innerHTML = `
