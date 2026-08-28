@@ -1553,32 +1553,68 @@ function triggerFailure() {
    LOCK 1
    ============================================================ */
 
+/* ============================================================
+   LOCK 1 VERIFICATION
+   ============================================================ */
 function verifyLock1() {
-  const c1 = document.getElementById('l1_1').value.trim().toLowerCase() === 'kann';
-  const c2 = document.getElementById('l1_2').value.trim().toLowerCase() === 'kannst';
-  const c3 = document.getElementById('l1_3').value.trim().toLowerCase() === 'kann';
-  const c4 = document.getElementById('l1_4').value.trim().toLowerCase() === 'können';
-  
-  const c5Value = document.getElementById('l1_5').value.trim().toLowerCase();
-  const c5 = (c5Value === 'könnt' || c5Value === 'konnt'); // Accepts with or without umlaut
+  const getVal = (id) => document.getElementById(id)?.value.trim().toLowerCase() || '';
 
-  const c6 = document.getElementById('l1_6').value.trim().toLowerCase() === 'können';
+  const c1 = getVal('l1_1') === 'kann';
+  const c2 = getVal('l1_2') === 'kannst';
+  const c3 = getVal('l1_3') === 'kann';
+  const c4 = getVal('l1_4') === 'können';
+  const c5 = getVal('l1_5') === 'könnt' || getVal('l1_5') === 'konnt';
+  const c6 = getVal('l1_6') === 'können';
 
-  // 1. Verify all 6 conjugations first
-  if (!c1 || !c2 || !c3 || !c4 || !c5 || !c6) {
-    triggerFailure();
-    return;
-  }
+  const codeInput = document.getElementById('lockCodeInput')?.value.trim() || '';
 
-  // 2. Verify the 4-digit code (2523)
-  const codeInput = document.getElementById('lockCodeInput');
-  if (codeInput && codeInput.value.trim() === '2523') {
+  // Validate conjugations and the 2523 keypad entry
+  if (c1 && c2 && c3 && c4 && c5 && c6 && codeInput === '2523') {
     triggerSuccess();
   } else {
     triggerFailure();
   }
 }
 
+/* ============================================================
+   SUCCESS HANDLER
+   ============================================================ */
+async function triggerSuccess() {
+  const container = document.getElementById('lockCard');
+  const feedback = document.getElementById('feedback');
+
+  if (feedback) {
+    feedback.className = 'feedback correct';
+    feedback.innerHTML = '🔓 LOCK UNLOCKED!';
+  }
+
+  if (container) {
+    container.classList.add('unlock-anim');
+  }
+
+  // Advance local state immediately
+  localProgress = Math.max(0, localProgress) + 1;
+
+  const updates = {};
+  updates[`teams/${teamKey}/progress`] = localProgress;
+
+  if (localProgress >= 6) {
+    updates[`teams/${teamKey}/finished`] = true;
+    updates[`teams/${teamKey}/finishTime`] = document.getElementById('studentTimer')?.textContent || '00:00';
+  }
+
+  // Instantly re-render the screen to Lock 2 without waiting for network bounce
+  renderLockPuzzle(localProgress, localProgress >= 6);
+
+  // Sync to database
+  if (roomRef && teamKey) {
+    try {
+      await roomRef.update(updates);
+    } catch (error) {
+      console.error('Database update failed:', error);
+    }
+  }
+}
 
 /* ============================================================
    GENERIC CODE CHECK
