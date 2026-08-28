@@ -1429,11 +1429,11 @@ function verifyLock1(event) {
   const s4 = getVal('s4') === 'könnt' || getVal('s4') === 'konnt';
   const s5 = getVal('s5') === 'kannst';
 
-  // 3. Check Final Code
+// 3. Check Final Code
   const codeInput = getVal('lockCodeInput');
 
-  // Verify everything is correct
-  if (c1 && c2 && c3 && c4 && c5 && c6 && s1 && s2 && s3 && s4 && s5 && codeInput === '2523') {
+  // Verify everything is correct with updated code 2543
+  if (c1 && c2 && c3 && c4 && c5 && c6 && s1 && s2 && s3 && s4 && s5 && codeInput === '2543') {
     triggerSuccess();
   } else {
     triggerFailure();
