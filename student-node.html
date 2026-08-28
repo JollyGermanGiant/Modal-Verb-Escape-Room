@@ -1561,6 +1561,39 @@ function verifyLock2(event) {
     triggerFailure();
   }
 }
+  function verifyLock3(event) {
+  if (event && event.preventDefault) {
+    event.preventDefault();
+  }
+
+  try {
+    const getVal = (id) => document.getElementById(id)?.value.trim() || '';
+
+    // 1. Verify Rule Evaluations (1: no, 2: yes, 3: yes, 4: no, 5: no, 6: no, 7: yes, 8: no)
+    const r1 = getVal('l3_r1') === 'no';
+    const r2 = getVal('l3_r2') === 'yes';
+    const r3 = getVal('l3_r3') === 'yes';
+    const r4 = getVal('l3_r4') === 'no';
+    const r5 = getVal('l3_r5') === 'no';
+    const r6 = getVal('l3_r6') === 'no';
+    const r7 = getVal('l3_r7') === 'yes';
+    const r8 = getVal('l3_r8') === 'no';
+
+    // 2. Verify Direction Code (L -> R -> R -> L)
+    const a1 = getVal('l3_a1') === 'L';
+    const a2 = getVal('l3_a2') === 'R';
+    const a3 = getVal('l3_a3') === 'R';
+    const a4 = getVal('l3_a4') === 'L';
+
+    if (r1 && r2 && r3 && r4 && r5 && r6 && r7 && r8 && a1 && a2 && a3 && a4) {
+      triggerSuccess();
+    } else {
+      triggerFailure();
+    }
+  } catch (err) {
+    console.error('Error in verifyLock3:', err);
+  }
+}
 /* ============================================================
    GENERIC CODE CHECK
    ============================================================ */
