@@ -372,6 +372,7 @@ select {
 
 
   <button
+    type="button"
     class="btn"
     id="connectBtn"
     onclick="connectToRoom()">
@@ -407,6 +408,7 @@ select {
 
 
     <button
+      type="button"
       class="btn"
       onclick="enterGame()">
 
@@ -1155,9 +1157,10 @@ function renderLockPuzzle(
         placeholder="4-Digit Lock Code">
 
 
-      <button
+<button
+        type="button"
         class="btn"
-        onclick="verifyLock1()">
+        onclick="verifyLock1(event)">
 
         Attempt Lock Clearance
 
@@ -1202,9 +1205,10 @@ function renderLockPuzzle(
 
 
       <button
+      type="button"
         class="btn"
         onclick="
-          verifyGenericCode(
+          verifyGenericCode(event,
             1,
             [52,49,50,49,49]
           )
@@ -1253,9 +1257,10 @@ function renderLockPuzzle(
 
 
       <button
+      type="button"
         class="btn"
         onclick="
-          verifyGenericCode(
+          verifyGenericCode(event,
             2,
             [76,76,76,82]
           )
@@ -1302,9 +1307,10 @@ function renderLockPuzzle(
 
 
       <button
+      type="button"
         class="btn"
         onclick="
-          verifyGenericCode(
+          verifyGenericCode(event,
             3,
             [48,48,50,56]
           )
@@ -1351,9 +1357,10 @@ function renderLockPuzzle(
 
 
       <button
+      type="button"
         class="btn"
         onclick="
-          verifyGenericCode(
+          verifyGenericCode(event,
             4,
             [49,57]
           )
@@ -1399,9 +1406,10 @@ function renderLockPuzzle(
 
 
       <button
+      type="button"
         class="btn"
         onclick="
-          verifyGenericCode(
+          verifyGenericCode(event,
             5,
             [50,49,49,52]
           )
@@ -1556,7 +1564,11 @@ function triggerFailure() {
 /* ============================================================
    LOCK 1 VERIFICATION
    ============================================================ */
-function verifyLock1() {
+function verifyLock1(event) {
+  if (event) {
+    event.preventDefault(); // Prevents the browser page refresh!
+  }
+
   const getVal = (id) => document.getElementById(id)?.value.trim().toLowerCase() || '';
 
   const c1 = getVal('l1_1') === 'kann';
@@ -1568,7 +1580,6 @@ function verifyLock1() {
 
   const codeInput = document.getElementById('lockCodeInput')?.value.trim() || '';
 
-  // Validate conjugations and the 2523 keypad entry
   if (c1 && c2 && c3 && c4 && c5 && c6 && codeInput === '2523') {
     triggerSuccess();
   } else {
@@ -1621,15 +1632,19 @@ async function triggerSuccess() {
    ============================================================ */
 
 function verifyGenericCode(
+  event,
   lockIndex,
   asciiArray
 ) {
+
+  if (event && event.preventDefault) {
+    event.preventDefault();
+  }
 
   const input =
     document.getElementById(
       'lockCodeInput'
     );
-
 
   if (!input) {
     return;
