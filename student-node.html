@@ -862,10 +862,9 @@ async function enterGame() {
   listenToRoom();
 
 }
-
-
+  
 /* ============================================================
-   ROOM LISTENER
+   ROOM LISTENER (FIXED)
    ============================================================ */
 
 function listenToRoom() {
@@ -874,99 +873,45 @@ function listenToRoom() {
     'value',
     snapshot => {
 
-      const data =
-        snapshot.val();
+      const data = snapshot.val();
 
+      if (!data) return;
 
-      if (!data) {
-        return;
+      // 1. UPDATE TIMER (ONLY touches the timer bezel text)
+      const seconds = Math.max(0, Number(data.secondsRemaining || 0));
+      const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
+      const secs = (seconds % 60).toString().padStart(2, '0');
+
+      const timerEl = document.getElementById('studentTimer');
+      if (timerEl) {
+        timerEl.textContent = `${minutes}:${secs}`;
       }
 
+      // 2. UPDATE STATUS TAG
+      const statusTag = document.getElementById('gameStatusTag');
+      if (statusTag) {
+        statusTag.textContent = String(data.status || 'setup').toUpperCase();
+      }
 
-      const seconds =
-        Math.max(
-          0,
-          Number(
-            data.secondsRemaining || 0
-          )
-        );
+      // 3. CHECK TEAM PROGRESS
+      const teamData = data.teams && data.teams[teamKey];
+      if (!teamData) return;
 
+      document.getElementById('teamNameHeading').textContent = teamData.name;
 
-      const minutes =
-        Math.floor(
-          seconds / 60
-        )
-          .toString()
-          .padStart(2, '0');
+      const serverProgress = Number(teamData.progress || 0);
 
-
-      const secs =
-        (seconds % 60)
-          .toString()
-          .padStart(2, '0');
-
-
-      document.getElementById(
-        'studentTimer'
-      ).textContent =
-        `${minutes}:${secs}`;
-
-
-      const statusTag =
-        document.getElementById(
-          'gameStatusTag'
-        );
-
-
-      statusTag.textContent =
-        String(
-          data.status || 'setup'
-        ).toUpperCase();
-
-
-const teamData = data.teams && data.teams[teamKey];
-
-if (teamData) {
-  const dbProgress = Number(teamData.progress || 0);
-
-  // ONLY re-render if the student has advanced to a NEW lock
-  if (dbProgress > localProgress) {
-    localProgress = dbProgress;
-    renderLockPuzzle(localProgress, teamData.finished);
-  }
-}
-
-
-      document.getElementById(
-        'teamNameHeading'
-      ).textContent =
-        teamData.name;
-
-
-const dbProgress = Number(teamData.progress || 0);
-// Only re-render if database progress is GREATER than local state
-if (dbProgress > localProgress) {
-  localProgress = dbProgress;
-  renderLockPuzzle(localProgress, teamData.finished);
-}{
-
-        localProgress =
-          Number(teamData.progress || 0);
-
-
-        renderLockPuzzle(
-          localProgress,
-          teamData.finished
-        );
-
+      // ONLY re-render the lock puzzle if progress level has changed!
+      // On initial load (localProgress === -1) or when moving to next lock.
+      if (localProgress === -1 || serverProgress > localProgress) {
+        localProgress = serverProgress;
+        renderLockPuzzle(localProgress, teamData.finished);
       }
 
     }
   );
 
 }
-
-
 /* ============================================================
    RENDER PUZZLES
    ============================================================ */
