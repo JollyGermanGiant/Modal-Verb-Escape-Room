@@ -1559,7 +1559,7 @@ function verifyLock2(event) {
     triggerFailure();
   }
 }
-  function verifyLock3(event) {
+function verifyLock3(event) {
   if (event && event.preventDefault) {
     event.preventDefault();
   }
@@ -1567,19 +1567,19 @@ function verifyLock2(event) {
   try {
     const getVal = (id) => document.getElementById(id)?.value.trim() || '';
 
-    // 1. Verify Rule Evaluations (1: no, 2: yes, 3: yes, 4: no, 5: no, 6: no, 7: yes, 8: no)
+    // 1. Verify Rules (1: no, 2: no, 3: yes, 4: no, 5: no, 6: yes, 7: yes, 8: no)
     const r1 = getVal('l3_r1') === 'no';
-    const r2 = getVal('l3_r2') === 'yes';
+    const r2 = getVal('l3_r2') === 'no';
     const r3 = getVal('l3_r3') === 'yes';
     const r4 = getVal('l3_r4') === 'no';
     const r5 = getVal('l3_r5') === 'no';
-    const r6 = getVal('l3_r6') === 'no';
+    const r6 = getVal('l3_r6') === 'yes';
     const r7 = getVal('l3_r7') === 'yes';
     const r8 = getVal('l3_r8') === 'no';
 
-    // 2. Verify Direction Code (L -> R -> R -> L)
+    // 2. Verify Direction Code: Rules 1-4 produce ❌ ❌ ✅ ❌ -> L L R L
     const a1 = getVal('l3_a1') === 'L';
-    const a2 = getVal('l3_a2') === 'R';
+    const a2 = getVal('l3_a2') === 'L';
     const a3 = getVal('l3_a3') === 'R';
     const a4 = getVal('l3_a4') === 'L';
 
