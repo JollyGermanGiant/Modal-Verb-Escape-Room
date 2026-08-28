@@ -1060,57 +1060,79 @@ function renderLockPuzzle(
   }
 
 
+/* ============================================================
+     LOCK 2: DIE SCHLIESSFÄCHER IM FLUR (MÜSSEN)
+     ============================================================ */
   else if (progress === 1) {
-
     container.innerHTML = `
-
       <h3 class="lock-header">
-
-        LOCK 2 —
-        Die Schließfächer im Flur
-        (müssen)
-
+        LOCK 2 — Die Schließfächer im Flur (müssen)
       </h3>
 
-
       <p>
-
-        Solve the school rules puzzle.
-        Convert final color-ordered letters
-        (M-S-B-S-S) using single-digit
-        alphabet values.
-
+        <i>„Nur wer weiß, was man in der Schule tun muss, findet den richtigen Code.“</i>
       </p>
 
+      <p>
+        <b>Teil 1: Ordnet die Wörter.</b><br>
+        <span style="font-size: 0.85rem; color: #aaa; font-style: italic;">
+          Bildet korrekte Sätze mit müssen. Achtet auf die Wortstellung!
+        </span>
+      </p>
 
-      <input
-        type="text"
-        id="lockCodeInput"
-        maxlength="5"
-        placeholder="5-Digit Lock Code">
+      <ol style="padding-left: 20px; line-height: 2;">
+        <li>ich / hausaufgaben / machen / meine / muss<br>
+          <input type="text" id="l2_s1" style="width: 100%; max-width: 420px;" placeholder="Satz eingeben...">
+        </li>
+        <li>wir / leise / sein / müssen<br>
+          <input type="text" id="l2_s2" style="width: 100%; max-width: 420px;" placeholder="Satz eingeben...">
+        </li>
+        <li>man / im unterricht / handy / benutzen / nicht / muss<br>
+          <input type="text" id="l2_s3" style="width: 100%; max-width: 420px;" placeholder="Satz eingeben...">
+        </li>
+        <li>ihr / pünktlich / sein / müsst<br>
+          <input type="text" id="l2_s4" style="width: 100%; max-width: 420px;" placeholder="Satz eingeben...">
+        </li>
+        <li>du / die tür / schließen / musst<br>
+          <input type="text" id="l2_s5" style="width: 100%; max-width: 420px;" placeholder="Satz eingeben...">
+        </li>
+        <li>schüler / in der bibliothek / essen / müssen / nicht<br>
+          <input type="text" id="l2_s6" style="width: 100%; max-width: 420px;" placeholder="Satz eingeben...">
+        </li>
+      </ol>
 
+      <p>
+        <b>Teil 2: Welche Sätze sind logische Schulregeln?</b><br>
+        <span style="font-size: 0.85rem; color: #aaa; font-style: italic;">
+          Markiert nur die realistischen Verpflichtungen.
+        </span>
+      </p>
 
-      <button
-      type="button"
-        class="btn"
-        onclick="
-          verifyGenericCode(event,
-            1,
-            [52,49,50,49,49]
-          )
-        ">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;">
+        <div>🔴 Rot (Satz 1): <select id="l2_r1"><option value="">--</option><option value="yes">Ja</option><option value="no">Nein</option></select></div>
+        <div>🔵 Blau (Satz 2): <select id="l2_r2"><option value="">--</option><option value="yes">Ja</option><option value="no">Nein</option></select></div>
+        <div>🟢 Grün (Satz 3): <select id="l2_r3"><option value="">--</option><option value="yes">Ja</option><option value="no">Nein</option></select></div>
+        <div>🟡 Gelb (Satz 4): <select id="l2_r4"><option value="">--</option><option value="yes">Ja</option><option value="no">Nein</option></select></div>
+        <div>🟣 Lila (Satz 5): <select id="l2_r5"><option value="">--</option><option value="yes">Ja</option><option value="no">Nein</option></select></div>
+        <div>🟠 Orange (Satz 6): <select id="l2_r6"><option value="">--</option><option value="yes">Ja</option><option value="no">Nein</option></select></div>
+      </div>
 
+      <p>
+        <b>Teil 3: Findet den Code.</b><br>
+        <span style="font-size: 0.85rem; color: #aaa; font-style: italic;">
+          Nehmt den ersten Buchstaben des Infinitivs in jedem logischen Satz nach der Farb-Reihenfolge (Rot → Blau → Grün → Gelb → Lila). Wandelt die Buchstaben in Zahlen um (A=1, B=2...). Bei zweistelligen Zahlen rechnet die Ziffern zusammen (z. B. 19 → 1+9=10 → 1+0=1).
+        </span>
+      </p>
+
+      <input type="text" id="lockCodeInput" maxlength="5" placeholder="5-Digit Lock Code">
+
+      <button type="button" class="btn" onclick="verifyLock2(event)">
         Attempt Lock Clearance
-
       </button>
 
-
       <div id="feedback"></div>
-
     `;
-
   }
-
 
   else if (progress === 2) {
 
