@@ -1501,7 +1501,47 @@ async function triggerSuccess() {
     }
   }
 }
+  
+function verifyLock2(event) {
+  if (event && event.preventDefault) {
+    event.preventDefault();
+  }
 
+  const getVal = (id) => {
+    let val = document.getElementById(id)?.value.trim().toLowerCase() || '';
+    // Strip trailing period if student typed one
+    if (val.endsWith('.')) val = val.slice(0, -1).trim();
+    return val;
+  };
+
+  // 1. Verify Unscrambled Sentences
+  const s1 = getVal('l2_s1') === 'ich muss meine hausaufgaben machen';
+  const s2 = getVal('l2_s2') === 'wir müssen leise sein';
+  const s3Val = getVal('l2_s3');
+  const s3 = s3Val === 'man muss im unterricht das handy nicht benutzen' || 
+             s3Val === 'man muss im unterricht handy nicht benutzen' ||
+             s3Val === 'man muss im unterricht kein handy benutzen';
+  const s4 = getVal('l2_s4') === 'ihr müsst pünktlich sein';
+  const s5 = getVal('l2_s5') === 'du musst die tür schließen';
+  const s6 = getVal('l2_s6') === 'schüler müssen in der bibliothek nicht essen';
+
+  // 2. Verify Logical Rule Selections (Sentences 1-5 = Ja, Sentence 6 = Nein)
+  const r1 = getVal('l2_r1') === 'yes';
+  const r2 = getVal('l2_r2') === 'yes';
+  const r3 = getVal('l2_r3') === 'yes';
+  const r4 = getVal('l2_r4') === 'yes';
+  const r5 = getVal('l2_r5') === 'yes';
+  const r6 = getVal('l2_r6') === 'no';
+
+  // 3. Verify Final Keypad Code (41211)
+  const codeInput = getVal('lockCodeInput');
+
+  if (s1 && s2 && s3 && s4 && s5 && s6 && r1 && r2 && r3 && r4 && r5 && r6 && codeInput === '41211') {
+    triggerSuccess();
+  } else {
+    triggerFailure();
+  }
+}
 /* ============================================================
    GENERIC CODE CHECK
    ============================================================ */
