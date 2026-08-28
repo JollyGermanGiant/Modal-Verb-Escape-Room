@@ -971,134 +971,76 @@ function renderLockPuzzle(
 
 
   if (progress === 0) {
-
     container.innerHTML = `
-
       <h3 class="lock-header">
-
-        LOCK 1 —
-        Der verschlossene Klassenraum
-        (können)
-
+        LOCK 1 — Der verschlossene Klassenraum (können)
       </h3>
 
-
       <p>
-
-        <i>
-          „Nur wer zeigen kann,
-          was er kann,
-          darf weitergehen."
-        </i>
-
+        <i>„Nur wer zeigen kann, was er kann, darf weitergehen."</i>
       </p>
 
-
       <p>
-        <b>
-          Teil 1: Conjugation Check
-        </b>
+        <b>Teil 1: Conjugation Check</b>
       </p>
 
-
-      <div
-        style="
-          display:grid;
-          grid-template-columns:1fr 1fr;
-          gap:6px;
-          margin-bottom:12px;
-        ">
-
-
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:12px;">
         <div>
           ich
-          <input
-            type="text"
-            id="l1_1"
-            placeholder="Form">
+          <input type="text" id="l1_1" placeholder="Form">
         </div>
-
-
         <div>
           wir
-          <input
-            type="text"
-            id="l1_4"
-            placeholder="Form">
+          <input type="text" id="l1_4" placeholder="Form">
         </div>
-
-
         <div>
           du
-          <input
-            type="text"
-            id="l1_2"
-            placeholder="Form">
+          <input type="text" id="l1_2" placeholder="Form">
         </div>
-
-
         <div>
           ihr
-          <input
-            type="text"
-            id="l1_5"
-            placeholder="Form">
+          <input type="text" id="l1_5" placeholder="Form">
         </div>
-
-
         <div>
           er/sie/es
-          <input
-            type="text"
-            id="l1_3"
-            placeholder="Form">
+          <input type="text" id="l1_3" placeholder="Form">
         </div>
-
-
         <div>
           sie/Sie
-          <input
-            type="text"
-            id="l1_6"
-            placeholder="Form">
+          <input type="text" id="l1_6" placeholder="Form">
         </div>
-
       </div>
 
+      <p>
+<p>
+  <b>Teil 2: Ergänzt die Sätze.</b><br>
+  <span style="font-size: 0.9rem; color: #aaa; font-style: italic;">
+    Benutzt die richtige Form von <strong>können</strong>. Achtet auf die Wortstellung!
+  </span>
+</p>
+
+<ol style="margin-bottom: 16px; padding-left: 20px; line-height: 2;">
+  <li>Ich <input type="text" id="s1" style="width: 90px;" placeholder="Form"> gut schwimmen.</li>
+  <li>Wir <input type="text" id="s2" style="width: 90px;" placeholder="Form"> heute nicht bleiben.</li>
+  <li>Er <input type="text" id="s3" style="width: 90px;" placeholder="Form"> sehr gut Deutsch sprechen.</li>
+  <li>Ihr <input type="text" id="s4" style="width: 90px;" placeholder="Form"> das Problem lösen.</li>
+  <li>Du <input type="text" id="s5" style="width: 90px;" placeholder="Form"> die Tür öffnen.</li>
+</ol>
 
       <p>
-        <b>
-          Teil 2: Keypad Entry
-        </b>
+        <b>Teil 3: Keypad Entry</b>
       </p>
-
 
       <p>
-        Count occurrences based on your
-        completed table and sentence worksheets:
+        Count occurrences based on your completed table and sentences above:
       </p>
-
 
       <ul>
-
-        <li>
-          Forms with '-st'
-        </li>
-
-        <li>
-          Forms with Umlaut (ö)
-        </li>
-
-        <li>
-          Forms 'kann'
-        </li>
-
-        <li>
-          Forms 'können'
-        </li>
-
+        <li>Digit 1: Forms with '-st' (+ sentence sheet occurrences)</li>
+        <li>Digit 2: Forms with Umlaut (ö) (+ sentence sheet occurrences)</li>
+        <li>Digit 3: Forms 'kann' (+ sentence sheet occurrences)</li>
+        <li>Digit 4: Forms 'können' (+ sentence sheet occurrences)</li>
       </ul>
-
 
       <input
         type="text"
@@ -1106,21 +1048,15 @@ function renderLockPuzzle(
         maxlength="4"
         placeholder="4-Digit Lock Code">
 
-
-<button
+      <button
         type="button"
         class="btn"
         onclick="verifyLock1(event)">
-
         Attempt Lock Clearance
-
       </button>
 
-
       <div id="feedback"></div>
-
     `;
-
   }
 
 
@@ -1468,21 +1404,17 @@ function triggerFailure() {
 
 }
 
-
-/* ============================================================
-   LOCK 1
-   ============================================================ */
-
 /* ============================================================
    LOCK 1 VERIFICATION
    ============================================================ */
 function verifyLock1(event) {
-  if (event) {
-    event.preventDefault(); // Prevents the browser page refresh!
+  if (event && event.preventDefault) {
+    event.preventDefault();
   }
 
   const getVal = (id) => document.getElementById(id)?.value.trim().toLowerCase() || '';
 
+  // 1. Check Conjugation Table
   const c1 = getVal('l1_1') === 'kann';
   const c2 = getVal('l1_2') === 'kannst';
   const c3 = getVal('l1_3') === 'kann';
@@ -1490,9 +1422,18 @@ function verifyLock1(event) {
   const c5 = getVal('l1_5') === 'könnt' || getVal('l1_5') === 'konnt';
   const c6 = getVal('l1_6') === 'können';
 
-  const codeInput = document.getElementById('lockCodeInput')?.value.trim() || '';
+  // 2. Check Sentence Answers
+  const s1 = getVal('s1') === 'kann';
+  const s2 = getVal('s2') === 'können';
+  const s3 = getVal('s3') === 'kann';
+  const s4 = getVal('s4') === 'könnt' || getVal('s4') === 'konnt';
+  const s5 = getVal('s5') === 'kannst';
 
-  if (c1 && c2 && c3 && c4 && c5 && c6 && codeInput === '2523') {
+  // 3. Check Final Code
+  const codeInput = getVal('lockCodeInput');
+
+  // Verify everything is correct
+  if (c1 && c2 && c3 && c4 && c5 && c6 && s1 && s2 && s3 && s4 && s5 && codeInput === '2523') {
     triggerSuccess();
   } else {
     triggerFailure();
