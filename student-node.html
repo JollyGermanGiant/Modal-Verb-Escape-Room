@@ -1571,80 +1571,29 @@ function triggerFailure() {
    ============================================================ */
 
 function verifyLock1() {
+  const c1 = document.getElementById('l1_1').value.trim().toLowerCase() === 'kann';
+  const c2 = document.getElementById('l1_2').value.trim().toLowerCase() === 'kannst';
+  const c3 = document.getElementById('l1_3').value.trim().toLowerCase() === 'kann';
+  const c4 = document.getElementById('l1_4').value.trim().toLowerCase() === 'können';
+  
+  const c5Value = document.getElementById('l1_5').value.trim().toLowerCase();
+  const c5 = (c5Value === 'könnt' || c5Value === 'konnt'); // Accepts with or without umlaut
 
-  const c1 =
-    document.getElementById(
-      'l1_1'
-    ).value
-      .trim()
-      .toLowerCase() === 'kann';
+  const c6 = document.getElementById('l1_6').value.trim().toLowerCase() === 'können';
 
-
-  const c2 =
-    document.getElementById(
-      'l1_2'
-    ).value
-      .trim()
-      .toLowerCase() === 'kannst';
-
-
-  const c3 =
-    document.getElementById(
-      'l1_3'
-    ).value
-      .trim()
-      .toLowerCase() === 'kann';
-
-
-  const c4 =
-    document.getElementById(
-      'l1_4'
-    ).value
-      .trim()
-      .toLowerCase() === 'können';
-
-
-  const c5Value =
-    document.getElementById(
-      'l1_5'
-    ).value
-      .trim()
-      .toLowerCase();
-
-
-  const c5 =
-    c5Value === 'könnt';
-
-
-  const c6 =
-    document.getElementById(
-      'l1_6'
-    ).value
-      .trim()
-      .toLowerCase() === 'können';
-
-
-  if (
-    !c1 ||
-    !c2 ||
-    !c3 ||
-    !c4 ||
-    !c5 ||
-    !c6
-  ) {
-
+  // 1. Verify all 6 conjugations first
+  if (!c1 || !c2 || !c3 || !c4 || !c5 || !c6) {
     triggerFailure();
-
     return;
-
   }
 
-
-  verifyGenericCode(
-    0,
-    [50,53,50,51]
-  );
-
+  // 2. Verify the 4-digit code (2523)
+  const codeInput = document.getElementById('lockCodeInput');
+  if (codeInput && codeInput.value.trim() === '2523') {
+    triggerSuccess();
+  } else {
+    triggerFailure();
+  }
 }
 
 
