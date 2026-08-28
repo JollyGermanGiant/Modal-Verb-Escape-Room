@@ -924,14 +924,17 @@ function listenToRoom() {
         ).toUpperCase();
 
 
-      const teamData =
-        data.teams &&
-        data.teams[teamKey];
+const teamData = data.teams && data.teams[teamKey];
 
+if (teamData) {
+  const dbProgress = Number(teamData.progress || 0);
 
-      if (!teamData) {
-        return;
-      }
+  // ONLY re-render if the student has advanced to a NEW lock
+  if (dbProgress > localProgress) {
+    localProgress = dbProgress;
+    renderLockPuzzle(localProgress, teamData.finished);
+  }
+}
 
 
       document.getElementById(
