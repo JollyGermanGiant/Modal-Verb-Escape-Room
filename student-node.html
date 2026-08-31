@@ -1203,55 +1203,68 @@ function renderLockPuzzle(
       <div id="feedback"></div>
     `;
   }
+ /* ============================================================
+     LOCK 4: WAS WOLLEN SIE WIRKLICH? (WOLLEN)
+     ============================================================ */
   else if (progress === 3) {
-
     container.innerHTML = `
-
       <h3 class="lock-header">
-
-        LOCK 4 —
-        Was wollen sie wirklich?
-        (wollen)
-
+        LOCK 4 — Was wollen sie wirklich? (wollen)
       </h3>
 
-
       <p>
-
-        Enter the calculated 4-digit
-        code based on who is telling
-        the truth.
-
+        <i>„Findet heraus, wer wirklich die Wahrheit sagt.“</i>
       </p>
 
+      <p><b>Teil 1: Die Aussagen</b></p>
+      <ul style="list-style: none; padding-left: 0; line-height: 1.6;">
+        <li style="margin-bottom: 8px;">👩 <strong>Anna:</strong> „Ich will in die Bibliothek gehen, weil ich für einen Test lernen will.“</li>
+        <li style="margin-bottom: 8px;">👦 <strong>Lukas:</strong> „Ich will in die Turnhalle gehen, aber ich habe keinen Sportbeutel.“</li>
+        <li style="margin-bottom: 8px;">👩 <strong>Mia:</strong> „Ich will nach Hause gehen, aber ich habe noch Unterricht.“</li>
+        <li style="margin-bottom: 8px;">👦 <strong>Tom:</strong> „Ich will ins Café gehen, aber ich habe kein Geld.“</li>
+      </ul>
+
+      <p><b>Teil 2: Die Hinweise</b></p>
+      <div style="background: rgba(255,255,255,0.05); padding: 10px 15px; border-radius: 6px; margin-bottom: 16px;">
+        <ul style="margin: 0; padding-left: 20px; line-height: 1.5; font-size: 0.9rem;">
+          <li>Die Bibliothek ist heute geschlossen.</li>
+          <li>Niemand darf das Gebäude während des Unterrichts verlassen.</li>
+          <li>Das Café ist kostenlos für Schüler.</li>
+          <li>Die Turnhalle ist heute geöffnet.</li>
+        </ul>
+      </div>
+
+      <p><b>Teil 3: Wer sagt die Wahrheit?</b></p>
+      <p style="font-size: 0.85rem; color: #aaa;">Wählt die richtige Person aus:</p>
+      <select id="l4_truth" style="margin-bottom: 20px; padding: 6px; font-size: 1rem;">
+        <option value="">-- Person wählen --</option>
+        <option value="anna">Anna</option>
+        <option value="lukas">Lukas</option>
+        <option value="mia">Mia</option>
+        <option value="tom">Tom</option>
+      </select>
+
+      <p><b>Teil 4: Keypad Entry</b></p>
+      <p style="font-size: 0.85rem; color: #aaa;">
+        Nehmt den ersten Buchstaben des Namens der richtigen Person (A=1, B=2 ... L=12). Multipliziert diese Zahl mit der Anzahl der Personen (4). gebt den 4-stelligen Code ein (z. B. 0048):
+      </p>
 
       <input
         type="text"
         id="lockCodeInput"
+        maxlength="4"
         placeholder="4-Digit Code">
 
-
       <button
-      type="button"
+        type="button"
         class="btn"
-        onclick="
-          verifyGenericCode(event,
-            3,
-            [48,48,50,56]
-          )
-        ">
-
+        onclick="verifyLock4(event)">
         Attempt Lock Clearance
-
       </button>
 
-
       <div id="feedback"></div>
-
     `;
-
   }
-
 
   else if (progress === 4) {
 
@@ -1590,6 +1603,30 @@ function verifyLock3(event) {
     }
   } catch (err) {
     console.error('Error in verifyLock3:', err);
+  }
+}
+  function verifyLock4(event) {
+  if (event && event.preventDefault) {
+    event.preventDefault();
+  }
+
+  try {
+    const getVal = (id) => document.getElementById(id)?.value.trim().toLowerCase() || '';
+
+    // 1. Verify selected person is Lukas
+    const truthPerson = getVal('l4_truth') === 'lukas';
+
+    // 2. Verify code (accepts "0048" or "48")
+    const codeInput = getVal('lockCodeInput');
+    const correctCode = codeInput === '0048' || codeInput === '48';
+
+    if (truthPerson && correctCode) {
+      triggerSuccess();
+    } else {
+      triggerFailure();
+    }
+  } catch (err) {
+    console.error('Error in verifyLock4:', err);
   }
 }
 /* ============================================================
